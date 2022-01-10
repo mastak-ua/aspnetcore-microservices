@@ -64,4 +64,14 @@ https://docs.microsoft.com/en-us/aspnet/core/web-api/action-return-types?view=as
 ### NuGet
 https://www.nuget.org/packages/
 
+### Redis
+docker pull redis
+docker exec -it aspnetrun-redis /bin/bash
 
+##### Run Redis CLI:
+redis-cli
+
+##### Redis CLI commands
+ping
+set key value
+get key
