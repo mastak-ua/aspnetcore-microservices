@@ -1,76 +1,62 @@
-using AspnetRunBasics.Data;
-using AspnetRunBasics.Repositories;
+using AspnetRunBasics.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using System;
 
 namespace AspnetRunBasics
 {
-    public class Startup
-    {
-        public Startup(IConfiguration configuration)
-        {
-            Configuration = configuration;
-        }
+	public class Startup
+	{
+		public Startup(IConfiguration configuration)
+		{
+			Configuration = configuration;
+		}
 
-        public IConfiguration Configuration { get; }
+		public IConfiguration Configuration { get; }
 
-        // This method gets called by the runtime. Use this method to add services to the container.
-        public void ConfigureServices(IServiceCollection services)
-        {
-            #region database services
+		// This method gets called by the runtime. Use this method to add services to the container.
+		public void ConfigureServices(IServiceCollection services)
+		{
+			services.AddHttpClient<ICatalogService, CatalogService>(c =>
+				c.BaseAddress = new Uri(Configuration["ApiSettings:GatewayAddress"]));
 
-            //// use in-memory database
-            //services.AddDbContext<AspnetRunContext>(c =>
-            //    c.UseInMemoryDatabase("AspnetRunConnection"));
+			services.AddHttpClient<IBasketService, BasketService>(c =>
+				c.BaseAddress = new Uri(Configuration["ApiSettings:GatewayAddress"]));
 
-            // add database dependecy
-            services.AddDbContext<AspnetRunContext>(c =>
-                c.UseSqlServer(Configuration.GetConnectionString("AspnetRunConnection")));
+			services.AddHttpClient<IOrderService, OrderService>(c =>
+				c.BaseAddress = new Uri(Configuration["ApiSettings:GatewayAddress"]));
 
-            #endregion            
+			services.AddRazorPages();
+		}
 
-            #region project services
+		// This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
+		public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+		{
+			if (env.IsDevelopment())
+			{
+				app.UseDeveloperExceptionPage();
+			}
+			else
+			{
+				app.UseExceptionHandler("/Error");
+				// The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
+				app.UseHsts();
+			}
 
-            // add repository dependecy
-            services.AddScoped<IProductRepository, ProductRepository>();
-            services.AddScoped<ICartRepository, CartRepository>();
-            services.AddScoped<IOrderRepository, OrderRepository>();
-            services.AddScoped<IContactRepository, ContactRepository>();
+			app.UseHttpsRedirection();
+			app.UseStaticFiles();
 
-            #endregion
+			app.UseRouting();
 
-            services.AddRazorPages();
-        }
+			app.UseAuthorization();
 
-        // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
-        {
-            if (env.IsDevelopment())
-            {
-                app.UseDeveloperExceptionPage();
-            }
-            else
-            {
-                app.UseExceptionHandler("/Error");
-                // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
-                app.UseHsts();
-            }
-
-            app.UseHttpsRedirection();
-            app.UseStaticFiles();
-
-            app.UseRouting();
-
-            app.UseAuthorization();
-
-            app.UseEndpoints(endpoints =>
-            {
-                endpoints.MapRazorPages();
-            });
-        }
-    }
+			app.UseEndpoints(endpoints =>
+			{
+				endpoints.MapRazorPages();
+			});
+		}
+	}
 }
